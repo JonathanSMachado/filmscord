@@ -1,5 +1,5 @@
-import { Box, Button, Text, TextField, Image } from "@skynexui/components";
 import appConfig from "../config.json";
+import { Box, Button, Text, TextField, Image } from "@skynexui/components";
 import { useState } from "react";
 import { useRouter } from "next/router";
 
@@ -19,7 +19,7 @@ function Title(props) {
   );
 }
 
-export default function PaginaInicial() {
+export default function Login() {
   // const username = "JonathanSMachado";
   const [username, setUsername] = useState("JonathanSMachado");
   const router = useRouter();

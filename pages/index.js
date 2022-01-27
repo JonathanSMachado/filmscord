@@ -20,9 +20,19 @@ function Title(props) {
 }
 
 export default function Login() {
-  // const username = "JonathanSMachado";
   const [username, setUsername] = useState("JonathanSMachado");
+  const [avatar, setAvatar] = useState("");
   const router = useRouter();
+
+  function getGithubUserInfo(username) {
+    fetch(`https://api.github.com/users/${username}`)
+      .then((response) => response.json())
+      .then((data) => {
+        setUsername(data.name);
+        setAvatar(data.avatar_url);
+      })
+      .catch((error) => console.error("User not found"));
+  }
 
   return (
     <>
@@ -95,7 +105,7 @@ export default function Login() {
                   backgroundColor: appConfig.theme.colors.neutrals[800],
                 },
               }}
-              onChange={(e) => setUsername(e.target.value)}
+              onChange={(e) => getGithubUserInfo(e.target.value)}
             />
             <Button
               type="submit"
@@ -132,7 +142,7 @@ export default function Login() {
                 borderRadius: "50%",
                 marginBottom: "16px",
               }}
-              src={`https://github.com/${username}.png`}
+              src={avatar}
             />
             <Text
               variant="body4"

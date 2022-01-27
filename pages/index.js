@@ -1,6 +1,6 @@
 import appConfig from "../config.json";
 import { Box, Button, Text, TextField, Image } from "@skynexui/components";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
 function Title(props) {
@@ -21,18 +21,29 @@ function Title(props) {
 
 export default function Login() {
   const [username, setUsername] = useState("JonathanSMachado");
-  const [avatar, setAvatar] = useState("");
+  const [userData, setUserData] = useState({});
   const router = useRouter();
 
-  function getGithubUserInfo(username) {
-    fetch(`https://api.github.com/users/${username}`)
-      .then((response) => response.json())
-      .then((data) => {
-        setUsername(data.name);
-        setAvatar(data.avatar_url);
+  function getGithubUserInfo() {
+    if (username.length > 2) {
+      fetch(`https://api.github.com/users/${username}`, {
+        method: "GET",
+        headers: {
+          Authorization: `token ${appConfig.github_access_token}`,
+        },
       })
-      .catch((error) => console.error("User not found"));
+        .then((response) => response.json())
+        .then((data) => {
+          const { avatar_url, login, email, name } = data;
+          setUserData({ avatar_url, login, email, name });
+        })
+        .catch((error) => console.error("User not found"));
+    } else {
+      setUserData({});
+    }
   }
+
+  useEffect(() => getGithubUserInfo(), [username]);
 
   return (
     <>
@@ -105,7 +116,7 @@ export default function Login() {
                   backgroundColor: appConfig.theme.colors.neutrals[800],
                 },
               }}
-              onChange={(e) => getGithubUserInfo(e.target.value)}
+              onChange={(e) => setUsername(e.target.value)}
             />
             <Button
               type="submit"
@@ -142,7 +153,7 @@ export default function Login() {
                 borderRadius: "50%",
                 marginBottom: "16px",
               }}
-              src={avatar}
+              src={userData.avatar_url}
             />
             <Text
               variant="body4"
@@ -153,7 +164,7 @@ export default function Login() {
                 borderRadius: "1000px",
               }}
             >
-              {username}
+              {userData.name}
             </Text>
           </Box>
           {/* Photo Area */}

@@ -1,23 +1,53 @@
-import { Box, Text, TextField, Image, Button } from "@skynexui/components";
-import React, { useState } from "react";
 import appConfig from "../../config.json";
+import { Box, Text, TextField, Image, Button } from "@skynexui/components";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/router";
+import { createClient } from "@supabase/supabase-js";
+
+const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+);
 
 export default function ChatPage() {
+  const router = useRouter();
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+  const [userData, setUserData] = useState({});
 
-  function handleMessageChange(event) {
+  useEffect(() => {
+    const userData = JSON.parse(sessionStorage.getItem("userData"));
+
+    if (!userData || Object.keys(userData).length === 0) {
+      return router.push("/");
+    }
+
+    setUserData(userData);
+
+    supabaseClient
+      .from("messages")
+      .select("*")
+      .order("id", { ascending: false })
+      .then(({ data }) => setMessages(data));
+  }, []);
+
+  function handleNewMessage(event) {
     if (event.key === "Enter") {
       event.preventDefault();
-      setMessages([
-        {
-          id: messages.length,
-          from: "me",
-          from_avatar: "avatar",
-          text: message,
-        },
-        ...messages,
-      ]);
+
+      const message = {
+        from: userData.name,
+        avatar_url: userData.avatar_url,
+        text: event.target.value,
+      };
+
+      supabaseClient
+        .from("messages")
+        .insert([message])
+        .then(({ data }) => {
+          setMessages([data[0], ...messages]);
+        });
+
       setMessage("");
     }
   }
@@ -75,7 +105,7 @@ export default function ChatPage() {
             <TextField
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              onKeyPress={handleMessageChange}
+              onKeyPress={handleNewMessage}
               placeholder="Insira sua mensagem aqui..."
               type="textarea"
               styleSheet={{
@@ -97,6 +127,8 @@ export default function ChatPage() {
 }
 
 function Header() {
+  const router = useRouter();
+
   return (
     <>
       <Box
@@ -113,7 +145,11 @@ function Header() {
           variant="tertiary"
           colorVariant="neutral"
           label="Logout"
-          href="/"
+          // href="/"
+          onClick={() => {
+            sessionStorage.removeItem("userData");
+            router.push("/");
+          }}
         />
       </Box>
     </>
@@ -162,7 +198,7 @@ function MessageList(props) {
                   display: "inline-block",
                   marginRight: "8px",
                 }}
-                src={`https://github.com/vanessametonini.png`}
+                src={message.avatar_url}
               />
               <Text tag="strong">{message.from}</Text>
               <Text

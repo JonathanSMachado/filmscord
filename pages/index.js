@@ -29,7 +29,7 @@ export default function Login() {
       fetch(`https://api.github.com/users/${username}`, {
         method: "GET",
         headers: {
-          Authorization: `token ${appConfig.github_access_token}`,
+          Authorization: `token ${process.env.NEXT_PUBLIC_GIT_TOKEN}`,
         },
       })
         .then((response) => response.json())
@@ -41,6 +41,10 @@ export default function Login() {
     } else {
       setUserData({});
     }
+  }
+
+  function setUserDataOnStorage() {
+    sessionStorage.setItem("userData", JSON.stringify(userData));
   }
 
   useEffect(() => getGithubUserInfo(), [username]);
@@ -83,6 +87,7 @@ export default function Login() {
             as="form"
             onSubmit={(e) => {
               e.preventDefault();
+              setUserDataOnStorage();
               router.push("/chat");
             }}
             styleSheet={{

@@ -31,25 +31,21 @@ export default function ChatPage() {
       .then(({ data }) => setMessages(data));
   }, []);
 
-  function handleNewMessage(event) {
-    if (event.key === "Enter") {
-      event.preventDefault();
+  function handleNewMessage(message) {
+    const messageObj = {
+      from: userData.name,
+      avatar_url: userData.avatar_url,
+      text: message,
+    };
 
-      const message = {
-        from: userData.name,
-        avatar_url: userData.avatar_url,
-        text: event.target.value,
-      };
+    supabaseClient
+      .from("messages")
+      .insert([messageObj])
+      .then(({ data }) => {
+        setMessages([data[0], ...messages]);
+      });
 
-      supabaseClient
-        .from("messages")
-        .insert([message])
-        .then(({ data }) => {
-          setMessages([data[0], ...messages]);
-        });
-
-      setMessage("");
-    }
+    setMessage("");
   }
 
   return (
@@ -105,7 +101,13 @@ export default function ChatPage() {
             <TextField
               value={message}
               onChange={(event) => setMessage(event.target.value)}
-              onKeyPress={handleNewMessage}
+              onKeyPress={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+
+                  handleNewMessage(event.target.value);
+                }
+              }}
               placeholder="Insira sua mensagem aqui..."
               type="textarea"
               styleSheet={{
@@ -117,6 +119,15 @@ export default function ChatPage() {
                 backgroundColor: appConfig.theme.colors.neutrals[800],
                 marginRight: "12px",
                 color: appConfig.theme.colors.neutrals[200],
+              }}
+            />
+            <Button
+              label="Enviar"
+              type="button"
+              colorVariant="positive"
+              variant="secondary"
+              onClick={() => {
+                handleNewMessage(message);
               }}
             />
           </Box>

@@ -3,11 +3,21 @@ import { Box, Text, TextField, Image, Button } from "@skynexui/components";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { createClient } from "@supabase/supabase-js";
+import { ButtonSendSticker } from "../../src/components/ButtonSendSticker";
 
 const supabaseClient = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
+
+function listenForMessages(callback) {
+  return supabaseClient
+    .from("messages")
+    .on("INSERT", (data) => {
+      callback(data.new);
+    })
+    .subscribe();
+}
 
 export default function ChatPage() {
   const router = useRouter();
@@ -29,6 +39,12 @@ export default function ChatPage() {
       .select("*")
       .order("id", { ascending: false })
       .then(({ data }) => setMessages(data));
+
+    const subscription = listenForMessages((newMessage) => {
+      setMessages((messages) => [newMessage, ...messages]);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   function handleNewMessage(message) {
@@ -42,7 +58,7 @@ export default function ChatPage() {
       .from("messages")
       .insert([messageObj])
       .then(({ data }) => {
-        setMessages([data[0], ...messages]);
+        // setMessages([data[0], ...messages]);
       });
 
     setMessage("");
@@ -122,12 +138,27 @@ export default function ChatPage() {
               }}
             />
             <Button
-              label="Enviar"
+              label="📤"
               type="button"
               colorVariant="positive"
               variant="secondary"
+              styleSheet={{
+                marginRight: "10px;",
+                borderRadius: "50%",
+                padding: "0 3px 0 0",
+                minWidth: "50px",
+                minHeight: "50px",
+                fontSize: "20px",
+                marginBottom: "8px",
+              }}
+              title="Enviar mensagem"
               onClick={() => {
                 handleNewMessage(message);
+              }}
+            />
+            <ButtonSendSticker
+              onStickerClick={(sticker) => {
+                handleNewMessage(`:sticker:${sticker}`);
               }}
             />
           </Box>
@@ -156,7 +187,6 @@ function Header() {
           variant="tertiary"
           colorVariant="neutral"
           label="Logout"
-          // href="/"
           onClick={() => {
             sessionStorage.removeItem("userData");
             router.push("/");
@@ -223,7 +253,16 @@ function MessageList(props) {
                 {new Date().toLocaleDateString()}
               </Text>
             </Box>
-            {message.text}
+            {message.text.startsWith(":sticker:") ? (
+              <Image
+                src={message.text.replace(":sticker:", "")}
+                styleSheet={{
+                  maxHeight: "150px",
+                }}
+              />
+            ) : (
+              message.text
+            )}
           </Text>
         );
       })}

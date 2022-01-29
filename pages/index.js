@@ -3,22 +3,6 @@ import { Box, Button, Text, TextField, Image } from "@skynexui/components";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 
-function Title(props) {
-  const Tag = props.tag || "h1";
-  return (
-    <>
-      <Tag>{props.children}</Tag>
-      <style jsx>{`
-        ${Tag} {
-          color: ${appConfig.theme.colors.neutrals["000"]};
-          font-size: 24px;
-          font-weight: 600;
-        }
-      `}</style>
-    </>
-  );
-}
-
 export default function Login() {
   const [username, setUsername] = useState("JonathanSMachado");
   const [userData, setUserData] = useState({});
@@ -100,7 +84,16 @@ export default function Login() {
               marginBottom: "32px",
             }}
           >
-            <Title tag="h2">Boas vindas de volta!</Title>
+            <Text
+              variant="heading2"
+              styleSheet={{
+                color: appConfig.theme.colors.neutrals["100"],
+                fontSize: "24px",
+                fontWeight: "600",
+              }}
+            >
+              Boas vindas de volta!
+            </Text>
             <Text
               variant="body3"
               styleSheet={{
